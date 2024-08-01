@@ -1,0 +1,11 @@
+{
+  "name": "clickhouseapiassignment",
+  "version": "1.0.0",
+  "description": "take home",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "mijamessmith",
+  "license": "MIT"
+}
