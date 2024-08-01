@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "preserveConstEnums": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "target": "es2020",
+    "module": "commonjs",
+    "outDir": ".build",
+    "moduleResolution": "node",
+    "lib": ["es2020", "dom", "esnext.asynciterable"],
+    "rootDir": "./",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "exclude": ["node_modules"]
+}
