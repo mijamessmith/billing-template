@@ -7,12 +7,13 @@
     "allowJs": true,
     "target": "es2020",
     "module": "commonjs",
-    "outDir": ".build",
+    "outDir": "./dist",
     "moduleResolution": "node",
     "lib": ["es2020", "dom", "esnext.asynciterable"],
-    "rootDir": "./",
+    "rootDir": "./src",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
 }
