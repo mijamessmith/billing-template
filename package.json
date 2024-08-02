@@ -13,6 +13,8 @@
   "dependencies": {
     "babel-plugin-source-map-support": "^2.2.0",
     "express": "^4.19.2",
+    "nock": "^13.5.4",
+    "redis": "^4.7.0",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.13.1"
   },

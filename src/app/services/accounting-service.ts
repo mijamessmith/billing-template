@@ -1,6 +1,10 @@
 
 
 interface AccountingService {
+  addLedger(): {
+
+  };
+
 
 };
 

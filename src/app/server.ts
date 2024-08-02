@@ -7,8 +7,18 @@ import routes from './routes';
 const PORT: number = 3001;
 const HOST: string = `http://localhost:${PORT}`
 
-const start = (): void => {
+const start = ()  => {
   logger.info(`starting application`);
+  process.on('uncaughtException', function (err, origin) {
+    logger.error(`There was a fatal exception. cause: ${err}, origin: ${origin}`);
+    setTimeout(function () {
+      process.exit(1);
+    }, 1000);
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    logger.error(`UnhandledPromiseRejection, cause: ${reason}`);
+  });
   const app = express();
   const swaggerDocument = JSON.parse(readFileSync(path.resolve(__dirname, '../../openapi.json'), 'utf8'));
   app.use(express.json());
@@ -19,6 +29,8 @@ const start = (): void => {
     logger.info(`app listening on port: ${PORT}`);
     logger.info(`API Documentation available at ${HOST}/api-docs`);
   });
+  return app;
 }
 
-start();
+const app = start();
+export default app;
