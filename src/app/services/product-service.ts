@@ -1,6 +1,6 @@
 
 
-interface ProductService {
+class ProductService {
 
 };
 

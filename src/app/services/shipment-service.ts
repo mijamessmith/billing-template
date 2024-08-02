@@ -1,6 +1,6 @@
 
 
-interface ShipmentService {
+class ShipmentService {
 
 };
 

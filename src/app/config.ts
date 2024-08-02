@@ -1,0 +1,1 @@
+export const CLICKHOUSE_API_URL: string = 'https://clickhouse.com/interview/api';

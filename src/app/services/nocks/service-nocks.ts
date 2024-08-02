@@ -1,5 +1,5 @@
 import nock from 'nock';
-const CLICKHOUSE_API_URL: string = 'https://dummbclickhouse.com';
+import { CLICKHOUSE_API_URL } from '../../config';
 import { CUSTOMER_DATA_BY_ID } from './customer-data';
 import { PRODUCT_DATA_BY_ID } from './product-data';
 
