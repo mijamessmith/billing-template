@@ -2,7 +2,8 @@ import nock from 'nock';
 import { CLICKHOUSE_API_URL } from '../../config';
 import { CUSTOMER_DATA_BY_ID } from './customer-data';
 import { PRODUCT_DATA_BY_ID } from './product-data';
-
+import { randomUUID } from 'crypto';
+import { GET_PRODUCTS_RESPONSE, PRODUCT_TYPE } from '../service-types/product-service-types';
 export const getCustomer = () => {
   nock(`${CLICKHOUSE_API_URL}/customers/:customerId`)
     .persist()
@@ -32,3 +33,32 @@ export const getProduct = () => {
       }
     })
 };
+
+export const getProducts = () => {
+  nock(`${CLICKHOUSE_API_URL}`)
+    .post('/products')
+    .reply((uri, requestBody: any) => {
+      const products = requestBody.products;
+      const response: GET_PRODUCTS_RESPONSE = {
+        items: []
+      };
+      for (let productId of products) {
+        const product: PRODUCT_TYPE = PRODUCT_DATA_BY_ID[productId as string];
+        if (!product) {
+          return [404, { message: `Product not found` }];
+        }
+        response.items.push(product);
+
+      }
+      return [200, response];
+    })
+};
+
+export const createShipment = () => {
+  nock(CLICKHOUSE_API_URL)
+    .post('/shipments')
+    .reply((uri, requestBody) => {
+      if(!Object.values(requestBody)) return [500, { message: 'Incomplete Request' }];
+      return [200, { id: randomUUID() }];
+    });
+}

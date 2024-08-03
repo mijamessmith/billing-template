@@ -13,6 +13,7 @@
   "dependencies": {
     "axios": "^1.7.3",
     "babel-plugin-source-map-support": "^2.2.0",
+    "crypto": "^1.0.1",
     "express": "^4.19.2",
     "nock": "^13.5.4",
     "redis": "^4.7.0",

@@ -6,4 +6,12 @@ export interface PRODUCT_TYPE {
   price: number;
   createdAt: number;
   lastModifiedAt: number;
+}
+
+export interface PRODUCT_LIST {
+  products: PRODUCT_TYPE[] | [];
 };
+
+export interface GET_PRODUCTS_RESPONSE {
+  items: PRODUCT_TYPE[];
+}
