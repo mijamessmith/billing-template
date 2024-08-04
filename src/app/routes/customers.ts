@@ -21,6 +21,7 @@ customersAPI.get('/:customerId', async (req: Request, res: Response) => {
     });
   } catch (e) {
     logger.error(`[${CTX}] Error fetching customer: ${e.message}`);
+    res.send(404);
   }
 });
 

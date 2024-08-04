@@ -1,23 +1,28 @@
 {
   "name": "clickhouseapiassignment",
   "version": "1.0.0",
-  "description": "take home",
+  "description": "take home assignment",
   "main": "dist/app/server.js",
   "scripts": {
-    "start": "babel-node --extensions \".ts\" src/app/server.ts",
+    "start": "babel-node --extensions \".ts\" src/app/server.ts NODE_ENV=dev --inspect --max-old-space-size=1024 --trace-deprecation --trace-warnings server",
     "build": "babel src --out-dir dist --extensions \".ts,.tsx\"",
-    "serve": "node dist/app/server.js"
+    "serve": "node dist/app/server.js",
+    "test": "jest --forceExit --detectOpenHandles"
   },
   "author": "mijamessmith",
   "license": "MIT",
   "dependencies": {
+    "@types/jest": "^29.5.12",
     "axios": "^1.7.3",
     "babel-plugin-source-map-support": "^2.2.0",
     "crypto": "^1.0.1",
     "express": "^4.19.2",
     "nock": "^13.5.4",
     "redis": "^4.7.0",
+    "reflect-metadata": "^0.2.2",
+    "sqlite3": "^5.1.7",
     "swagger-ui-express": "^5.0.1",
+    "typeorm": "^0.3.20",
     "winston": "^3.13.1"
   },
   "devDependencies": {
@@ -28,6 +33,7 @@
     "@babel/preset-typescript": "^7.24.7",
     "@types/express": "^4.17.21",
     "@types/node": "^22.0.2",
+    "@types/sqlite3": "^3.1.11",
     "ts-jest": "^28.0.8",
     "ts-loader": "^9.3.1",
     "ts-node": "^10.9.2",

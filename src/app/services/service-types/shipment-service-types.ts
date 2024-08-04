@@ -10,8 +10,3 @@ export interface SHIPMENT_CREATE_TYPE {
   shippingAddress: CUSTOMER_ADDRESS_TYPE;
   products: [PRODUCT_ITEM_TYPE];
 };
-
-export interface SHIPMENT_CREATE_INPUT {
-  customer: string;
-  products: string[];
-};
