@@ -2,7 +2,6 @@ export interface LEDGER_INSERT {
   customer: string;
   value: number;
   type: 'credit' | 'debit';
-  created_at: string;
 };
 
 export interface LEDGER_INSERT_RESPONSE {

@@ -13,7 +13,7 @@ class CustomerService {
       return response?.data;
     } catch (e) {
       logger.error(`${CTX} Error: ${e.message}`);
-      throw e;
+      throw new Error(`Error: Failed to find customer: ${e.message}`);
     }
   }
 };

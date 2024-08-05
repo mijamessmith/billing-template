@@ -4,7 +4,7 @@
   "description": "take home assignment",
   "main": "dist/app/server.js",
   "scripts": {
-    "start": "babel-node --extensions \".ts\" src/app/server.ts NODE_ENV=dev --inspect --max-old-space-size=1024 --trace-deprecation --trace-warnings server",
+    "start": "NODE_ENV=dev babel-node --extensions \".ts\" src/app/server.ts --inspect --max-old-space-size=1024 --trace-deprecation --trace-warnings server",
     "build": "babel src --out-dir dist --extensions \".ts,.tsx\"",
     "serve": "node dist/app/server.js",
     "test": "jest --forceExit --detectOpenHandles"
@@ -12,6 +12,9 @@
   "author": "mijamessmith",
   "license": "MIT",
   "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/plugin-proposal-decorators": "^7.24.7",
+    "@babel/plugin-transform-typescript": "^7.25.2",
     "@types/jest": "^29.5.12",
     "axios": "^1.7.3",
     "babel-plugin-source-map-support": "^2.2.0",

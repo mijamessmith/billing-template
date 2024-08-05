@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import logger from '../../logger';
 import { getDBConfigs } from '../../utils/env-utils';

@@ -26,7 +26,7 @@ class AccountingService extends ServiceInterface {
       if (!isValidLineItem) {
         const { type } = ledger;
         const errorMessage = `Transactions of type ${type} must be ${type === LINE_ITEM_TYPE.CREDIT ? 'more than' : 'less than'} or equal to 0`;
-        throw new Error('errorMessage');
+        throw new Error(errorMessage);
       }
       const repository = await this._getRepository(LineItemModel);
       const ledgerEntry: LEDGER_INSERT_RESPONSE = await repository.save(ledger);

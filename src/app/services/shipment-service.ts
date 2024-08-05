@@ -1,12 +1,12 @@
-import { SHIPMENT_CREATE_TYPE } from './service-types/shipment-service-types';
+// import { SHIPMENT_CREATE_TYPE } from './service-types/shipment-service-types';
 
-class ShipmentService {
-  createShipment(customerId: string, productIds: string[]): Promise<SHIPMENT_CREATE_TYPE> {
-    const dummy: SHIPMENT_CREATE_TYPE = {
+// class ShipmentService {
+//   createShipment(customerId: string, productIds: string[]): Promise<SHIPMENT_CREATE_TYPE> {
+//     const dummy: SHIPMENT_CREATE_TYPE = {
 
-    };
-    return dummy;
-  }
-};
+//     };
+//     return dummy;
+//   }
+// };
 
-export default ShipmentService;
+// export default ShipmentService;

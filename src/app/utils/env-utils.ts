@@ -1,7 +1,7 @@
 import logger from '../logger';
 
 const DEFAULT_CONFIGS = {
-  database: 'localhost',
+  database: ':memory:',
   username: 'sql-lite',
   synchronize: true
 };
