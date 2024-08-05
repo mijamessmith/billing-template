@@ -10,7 +10,7 @@ const HOST: string = `http://localhost:${PORT}`
 import routes from './routes';
 
 const start = async ()  => {
-  logger.info(`starting application`);
+  logger.info(`starting application in environment: ${process.env.NODE_ENV}`);
   process.on('uncaughtException', function (err, origin) {
     logger.error(`There was a fatal exception. cause: ${err}, origin: ${origin}`);
     setTimeout(function () {

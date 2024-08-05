@@ -11,3 +11,7 @@ export interface LEDGER_INSERT_RESPONSE {
 export interface ACCOUNTING_AUDIT_INSERT {
 
 }
+
+export enum TRANSACTION_TYPES {
+
+}

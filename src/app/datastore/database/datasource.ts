@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import logger from '../../logger';
 import { getDBConfigs } from '../../utils/env-utils';
-import LineItemsModel from '../models/line_items';
+import LineItemsModel from '../models/line-items';
 export default class DatabaseConnection {
   private _dataSource: DataSource;
   private static _instance: DatabaseConnection;

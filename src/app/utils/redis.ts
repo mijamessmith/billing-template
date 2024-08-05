@@ -26,7 +26,13 @@ class RedisClient {
   async del(key: string): Promise<number> {
     return this.client.del(key);
   }
+  async incr(key: string): Promise<number> {
+    return this.client.incr(key);
+  }
 
+  async pexpire(key: string, timeout: number): Promise<boolean> {
+    return this.client.pExpire(key, timeout);
+  }
   async disconnect(): Promise<void> {
     await this.client.quit();
   }
