@@ -1,5 +1,8 @@
 import logger from '../logger';
 
+export const PORT: number = 3001;
+export const HOST: string = `http://localhost:${PORT}`
+
 const DEFAULT_CONFIGS = {
   database: ':memory:',
   username: 'sql-lite',

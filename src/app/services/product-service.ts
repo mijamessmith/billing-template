@@ -1,13 +1,15 @@
-import { PRODUCT_LIST, PRODUCT_TYPE, GET_PRODUCTS_RESPONSE } from './service-types/product-service-types';
-import { getProduct as setUpGetProductNock, getProducts as setUpGetProductNocks} from './nocks/service-nocks';
+import { PRODUCT_LIST, PRODUCT_TYPE, GET_PRODUCTS_RESPONSE, PROMO_CODE_TYPE } from './service-types/product-service-types';
+import { getProduct as setUpGetProductNock, getProducts as setUpGetProductsNock, getProductPromoCode as setUpPromoCodeNock} from './nocks/service-nocks';
+import ServiceInterface from './service-interface';
 import axios from 'axios';
 import logger from '../logger';
 import { CLICKHOUSE_API_URL } from '../config';
 const CTX: string = 'ProductService';
 setUpGetProductNock();
-setUpGetProductNocks();
+setUpGetProductsNock();
+setUpPromoCodeNock();
 
-class ProductService {
+class ProductService extends ServiceInterface {
 
   async getProducts(productIds: string[]): Promise<PRODUCT_LIST> {
     try {
@@ -29,6 +31,20 @@ class ProductService {
       return response.data;
     } catch (e) {
       logger.error(`${CTX} Error fetching product: ${e.message}`);
+      throw e;
+    }
+  }
+
+  /*
+    Unsure if the promo code API would reside in an external service or not, but for clarity I built it in here.
+    Usually, I would assume/prefer if it resided along with the product service.
+  */
+  async getProductPromoCode(promoCodeId: string): Promise<PROMO_CODE_TYPE> {
+    try {
+      const response = await axios.get<PROMO_CODE_TYPE>(`${CLICKHOUSE_API_URL}/products/promo-codes/:${promoCodeId}`);
+      return response.data;
+    } catch (e) {
+      logger.error(`${CTX} Error fetching product promo code: ${e.message}`);
       throw e;
     }
   }

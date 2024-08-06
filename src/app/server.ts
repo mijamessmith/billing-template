@@ -5,8 +5,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import logger from './logger';
-const PORT: number = 3001;
-const HOST: string = `http://localhost:${PORT}`
+import { HOST, PORT } from './utils/env-utils';
 import routes from './routes';
 
 const start = async ()  => {
@@ -24,7 +23,7 @@ const start = async ()  => {
   logger.info(`Connecting to DB Instance...`);
   const dbConnection = DatabaseConnection.getInstance();
   await dbConnection.getDataSource();
-  logger.info(`Connected to DB`)
+  logger.info(`Connected to DB`);
   const app = express();
   const swaggerDocument = JSON.parse(readFileSync(path.resolve(__dirname, '../../openapi.json'), 'utf8'));
   app.use(express.json());

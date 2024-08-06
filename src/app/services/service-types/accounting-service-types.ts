@@ -6,12 +6,18 @@ export interface LEDGER_INSERT {
 
 export interface LEDGER_INSERT_RESPONSE {
 
-}
+};
 
 export interface ACCOUNTING_AUDIT_INSERT {
 
-}
+};
 
 export enum TRANSACTION_TYPES {
 
-}
+};
+
+export interface PURCHASE_TRANSACTION_TYPE {
+  customerId: string;
+  productId: string;
+  promoCodeId: string;
+};

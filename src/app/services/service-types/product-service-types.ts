@@ -15,3 +15,14 @@ export interface PRODUCT_LIST {
 export interface GET_PRODUCTS_RESPONSE {
   items: PRODUCT_TYPE[];
 }
+
+export interface PROMO_CODE_TYPE {
+  id: string;
+  code: string;
+  rate: number;
+  discount_type: string;
+  created_at: Date;
+  valid_from: Date;
+  valid_to: Date;
+  active: Boolean;
+}

@@ -10,7 +10,7 @@ import { CUSTOMER_TYPE } from '../services/service-types/customer-service-types'
 */
 customersAPI.get('/:customerId', async (req: Request, res: Response) => {
   try {
-    const customerId: string = req.params.customerId
+    const customerId: string = req.params.customerId;
     if (!customerId) {
       throw new Error('Customer Id Required');
     }

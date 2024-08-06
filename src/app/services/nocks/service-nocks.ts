@@ -3,7 +3,8 @@ import { CLICKHOUSE_API_URL } from '../../config';
 import { CUSTOMER_DATA_BY_ID } from './customer-data';
 import { PRODUCT_DATA_BY_ID } from './product-data';
 import { randomUUID } from 'crypto';
-import { GET_PRODUCTS_RESPONSE, PRODUCT_TYPE } from '../service-types/product-service-types';
+import { GET_PRODUCTS_RESPONSE, PRODUCT_TYPE, PROMO_CODE_TYPE } from '../service-types/product-service-types';
+import { PROMO_CODE_DATA } from './promo-code-data';
 export const getCustomer = () => {
   nock(`${CLICKHOUSE_API_URL}/customers/:customerId`)
     .persist()
@@ -22,7 +23,7 @@ export const getCustomer = () => {
 export const getProduct = () => {
   nock(`${CLICKHOUSE_API_URL}/products/:productId`)
     .persist()
-    .get(/\/customers\/\w+/)
+    .get(/\/products\/\w+/)
     .reply((uri) => {
       const productId = uri.split('/').pop();
       const product = PRODUCT_DATA_BY_ID[productId as string];
@@ -51,6 +52,20 @@ export const getProducts = () => {
 
       }
       return [200, response];
+    })
+};
+
+export const getProductPromoCode = () => {
+  nock(`${CLICKHOUSE_API_URL}/products/promo-code/:id`)
+    .get(/\/products\/\w+/)
+    .reply((uri, requestBody: any) => {
+      const promoCodeId = uri.split('/').pop();
+      const code = PROMO_CODE_DATA[promoCodeId as string];
+      if (code) {
+        return [200, code];
+      } else {
+        return [404, { message: 'promo code not found' }];
+      }
     })
 };
 

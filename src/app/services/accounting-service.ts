@@ -2,14 +2,16 @@ import logger from '../logger';
 import { DataSource } from 'typeorm';
 import ServiceInterface from './service-interface';
 import CustomerProductTransactions from '../datastore/models/customer-product-transactions';
-import { LEDGER_INSERT, LEDGER_INSERT_RESPONSE } from './service-types/accounting-service-types';
+import { LEDGER_INSERT, LEDGER_INSERT_RESPONSE, PURCHASE_TRANSACTION_TYPE } from './service-types/accounting-service-types';
 import { TRANSACTION_TYPE } from '../datastore/models/model-types/customer-product-transaction-types';
-import { PRODUCT_TYPE } from './service-types';
+import { PRODUCT_TYPE, PROMO_CODE_TYPE } from './service-types';
 import CustomerService from './customer-service';
 import ProductService  from './product-service';
 import LineItemModel from '../datastore/models/line-items';
 import { LINE_ITEM_TYPE } from '../datastore/models/model-types/line-item-types';
-const CTX: string = '[AccountingService]'
+import { lock } from '../utils/lock';
+const CTX: string = '[AccountingService]';
+const LOCK_TIME_DEFAULT = 20000;
 class AccountingService extends ServiceInterface {
 
   private _customerService = new CustomerService();
@@ -21,7 +23,10 @@ class AccountingService extends ServiceInterface {
     this._productService = productService;
   }
   async addLedger(ledger: Partial <LineItemModel>): Promise<LEDGER_INSERT_RESPONSE> {
-    const LGR = '(addLedger)'
+    const LGR = '(addLedger)';
+    const { ledger_id } = ledger;
+    const lockKey = `${ledger_id}`;
+    const unlock: Function = await lock(lockKey, LOCK_TIME_DEFAULT)
     try {
       const customerId: string = ledger.customer || "";
       const isValidCustomer: Boolean = await this._validateCustomerId(customerId);
@@ -36,6 +41,7 @@ class AccountingService extends ServiceInterface {
       }
     } catch (e) {
       logger.error(`${CTX} ${LGR} Error: ${e.message}`);
+      unlock()
       throw e;
     }
     const queryRunner = await this._getQueryRunner();
@@ -46,11 +52,13 @@ class AccountingService extends ServiceInterface {
       const lineItem = repository.create(ledger);
       const ledgerEntry: LEDGER_INSERT_RESPONSE = await repository.save(lineItem);
       logger.info(`${CTX} ${LGR} Ledger Inserted ${ledgerEntry}`);
+      unlock();
       return ledgerEntry;
     } catch (e) {
       await queryRunner.rollbackTransaction();
       logger.error(`${CTX} ${LGR} Error: ${e.message}`);
       await queryRunner.release();
+      unlock();
       throw e;
     }
   }
@@ -62,6 +70,7 @@ class AccountingService extends ServiceInterface {
         .select('SUM(line_items.value)', 'sum')
         .where('line_items.customer = :customerId', { customerId })
         .getRawOne();
+      //if 0, post a 0 transaction?
       const total = result.sum ?? 0;
       return parseFloat(total);
     } catch (e) {
@@ -70,24 +79,54 @@ class AccountingService extends ServiceInterface {
     }
   };
 
-  async handleCustomerPurchaseTransaction(purchaseTransaction) {
-    const LGR = '(processCustomerPurchaseTransation)'
+  async prepareCustomerPurchaseTransaction(purchaseTransaction: PURCHASE_TRANSACTION_TYPE) {
+    const LGR = '(processCustomerPurchaseTransation)';
+    const { customerId, productId, promoCodeId } = purchaseTransaction;
+    const lockKey = `${customerId}_${productId}`;
+    const unlock: Function = await lock(lockKey, LOCK_TIME_DEFAULT)
     try {
-      const { customerId, productId } = purchaseTransaction;
       const product: PRODUCT_TYPE = await this._productService.getProduct(productId);
       if (!product) throw new Error('Product Not Found');
-      const cost: number = product.price;
+      const cost: number = await this.applyProductDiscount(promoCodeId, product.price);
       const customerBalanceAfterPurchase = await this.determineCustomerCapacityToPurchaseProduct(customerId, cost);
       if (customerBalanceAfterPurchase < 0) {
         throw new Error('Customer Lacks Sufficient Funds for Purchase');
       }
       const result = await this.processPurchase(purchaseTransaction, product);
+      await unlock();
       return result;
     } catch (e) {
       logger.error(`${CTX} ${LGR} Error: ${e.message}`);
+      await unlock();
       throw e;
     }
   };
+
+  async applyProductDiscount(promoCodeId: string | null, price: number  ) {
+    try {
+      if (!promoCodeId) {
+        return price;
+      }
+      const PromoCode: PROMO_CODE_TYPE = await this._productService.getProductPromoCode(promoCodeId);
+      if (!PromoCode.active) {
+        return price;
+      }
+      if (PromoCode.discount_type === 'fixed') {
+        const adjustedPrice = price + PromoCode.rate; //we assume rates are always negative
+        return adjustedPrice >= 0 ? adjustedPrice : 0;
+      }
+
+      if (PromoCode.discount_type === 'percentage') {
+        const discount = Math.ceil(price * PromoCode.rate * 100) / 100;
+        const adjustedPrice = price - discount;
+        return adjustedPrice >= 0 ? adjustedPrice : 0;
+      }
+      return price;
+    } catch (e) {
+      logger.error(`${CTX } Error Applying Product Discount: ${e.message}`);
+      return price; //we simply ignore codes if failures
+    }
+  }
 
   async processPurchase(transaction, product: PRODUCT_TYPE): Promise<any> {
     const LGR = '(processPurchase)';
@@ -110,7 +149,7 @@ class AccountingService extends ServiceInterface {
     try {
 
     } catch (e) {
-
+      throw e;
     }
   };
 
