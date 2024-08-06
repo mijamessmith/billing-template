@@ -70,11 +70,33 @@ class AccountingService extends ServiceInterface {
         .select('SUM(line_items.value)', 'sum')
         .where('line_items.customer = :customerId', { customerId })
         .getRawOne();
-      //if 0, post a 0 transaction?
-      const total = result.sum ?? 0;
-      return parseFloat(total);
+      if (!result.sum) {
+        await this.initiateCustomerBalance(customerId);
+        return 0;
+      }
+      return result.sum;
     } catch (e) {
       logger.error(`${CTX} getCustomerBalance Error: ${e.message}`);
+      throw e;
+    }
+  };
+
+  async initiateCustomerBalance(customerId: string): Promise<void> {
+    try {
+      const initialLineItem: Partial<LineItemModel> = {
+        customer: customerId,
+        value: 0,
+        type: LINE_ITEM_TYPE.DEBIT,
+        ledger_id: 'initial_id',
+      };
+      const queryRunner = await this._getQueryRunner();
+      await queryRunner.connect();
+      const repository = await queryRunner.manager.getRepository(LineItemModel);
+      const lineItem = repository.create(initialLineItem);
+      await repository.save(lineItem);
+      logger.info(`${CTX} Initial Ledger Inserted`);
+    } catch (e) {
+      logger.error(`${CTX} Error initializing customer balance: ${e.message}`);
       throw e;
     }
   };

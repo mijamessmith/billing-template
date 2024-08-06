@@ -3,6 +3,7 @@ import { getProduct as setUpGetProductNock, getProducts as setUpGetProductsNock,
 import ServiceInterface from './service-interface';
 import axios from 'axios';
 import logger from '../logger';
+import Cache from '../utils/cache';
 import { CLICKHOUSE_API_URL } from '../config';
 const CTX: string = 'ProductService';
 setUpGetProductNock();
@@ -27,8 +28,12 @@ class ProductService extends ServiceInterface {
 
   async getProduct(productId: string): Promise<PRODUCT_TYPE> {
     try {
+      const cachedProduct: PRODUCT_TYPE | null = await Cache.getProductFromCache(productId);
+      if (cachedProduct) return cachedProduct;
       const response = await axios.get<PRODUCT_TYPE>(`${CLICKHOUSE_API_URL}/products/${productId}`);
-      return response.data;
+      const product: PRODUCT_TYPE = response.data;
+      Cache.updateProductCache(product);
+      return product;
     } catch (e) {
       logger.error(`${CTX} Error fetching product: ${e.message}`);
       throw e;

@@ -5,7 +5,7 @@ import { LINE_ITEM_TYPE } from './model-types/line-item-types';
 export default class LineItem {
 
   @PrimaryGeneratedColumn('uuid')
-  readonly id!: string;
+  readonly id: string;
 
   @Column('varchar')
   customer!: string;
