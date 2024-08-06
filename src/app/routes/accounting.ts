@@ -3,14 +3,13 @@ import logger from '../logger';
 const CTX: string = 'accountingAPI';
 import AccountingService from  '../services/accounting-service';
 const accountingService = new AccountingService;
-import LineItemModel from '../datastore/models/line-items';
-import { LEDGER_INSERT, LEDGER_INSERT_RESPONSE } from '../services/service-types/accounting-service-types';
+import LineItem from '../datastore/models/line-items';
+import CustomerProductTransactions from '../datastore/models/customer-product-transactions'
 const accountingAPI = Router();
 
 accountingAPI.post('/account-ledger', async (req: Request, res: Response) => {
   try {
-    //do some account type validation here
-    const ledger: Partial<LineItemModel> = req.body.ledger;
+    const ledger: Partial<LineItem> = req.body.ledger;
     const result = await accountingService.addLedger(ledger);
     return res.send({
       success: true,
@@ -44,6 +43,29 @@ accountingAPI.get('/balance/:customerId', async (req: Request, res: Response) =>
     res.status(500).send({
       success: false,
       error: 'Internal Server Error: Failed to fetch balance'
+    });
+  }
+});
+accountingAPI.get('/purchase-history/:customerId', async (req: Request, res: Response) => {
+  try {
+    const customerId = req.params.customerId;
+    if (!customerId) {
+      return res.status(404).send({
+        success:false,
+        error: 'customer id not provided'
+      });
+    }
+    const purchases: CustomerProductTransactions[] = await accountingService.getCustomerPurchases(customerId);
+    res.status(200).send({
+      success: true,
+      customerId: customerId,
+      purchases
+    })
+  } catch (e) {
+    logger.error(`${CTX} Failed to get customer purchase history`);
+    res.status(500).send({
+      success: false,
+      error: 'Internal Server Error: Failed to fetch purchase history'
     });
   }
 });

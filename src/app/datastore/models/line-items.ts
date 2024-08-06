@@ -13,9 +13,7 @@ export default class LineItem {
   @Column('float')
   value!: number;
 
-  @Column({
-    type: 'varchar'
-  })
+  @Column('varchar')
   type!: LINE_ITEM_TYPE;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })

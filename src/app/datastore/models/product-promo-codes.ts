@@ -7,7 +7,7 @@ export default class LineItem {
   @PrimaryGeneratedColumn('uuid')
   readonly id!: string;
 
-  @Column('string', { unique: true })
+  @Column('varchar', { unique: true })
   code!: string;
 
   @Column('float')

@@ -2,7 +2,9 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import logger from '../../logger';
 import { getDBConfigs } from '../../utils/env-utils';
-import LineItemsModel from '../models/line-items';
+import LineItems from '../models/line-items';
+import CustomerProductTransactions from '../models/customer-product-transactions';
+import PromoCodes from '../models/product-promo-codes';
 export default class DatabaseConnection {
   private _dataSource: DataSource;
   private static _instance: DatabaseConnection;
@@ -31,7 +33,9 @@ export default class DatabaseConnection {
       logger: 'simple-console',
       synchronize,
       entities: [
-        LineItemsModel
+        LineItems,
+        CustomerProductTransactions,
+        PromoCodes
       ],
     });
 

@@ -14,16 +14,16 @@ export default class CustomerProductTransactions {
   product_sku!: string;
 
   @OneToOne(() => LineItem)
-  @JoinColumn()
+  @JoinColumn({ name: 'line_item_id' })
   line_item_id!: LineItem;
 
   @Column('varchar')
-  transaction_type: TRANSACTION_TYPE;
+  transaction_type!: TRANSACTION_TYPE;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
   @ManyToOne(() => PromoCode)
-  @Column({type: 'string', default: null })
-  promo_code_id: PromoCode;
+  @JoinColumn({ name: 'promo_code_id' })
+  promo_code_id?: PromoCode;
 }

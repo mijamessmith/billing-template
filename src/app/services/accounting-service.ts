@@ -232,6 +232,19 @@ class AccountingService extends ServiceInterface {
     }
   };
 
+  async getCustomerPurchases(customer: string): Promise<CustomerProductTransactions[]> {
+    try {
+      const repository = await this._getRepository(CustomerProductTransactions);
+      const result: CustomerProductTransactions[] = await repository.createQueryBuilder('customer_product_transactions')
+        .where('customer_product_transactions.customer = :customer', { customer })
+        .getRawMany();
+      return result;
+    } catch (e) {
+      logger.error(`${CTX} getCustomerBalance Error: ${e.message}`);
+      throw e;
+    }
+  }
+
   async _validateCustomerId(customerId: string): Promise<Boolean> {
     logger.info(`${CTX} Validating Customer Identity`)
     const customer = await this._customerService.getCustomer(customerId);
