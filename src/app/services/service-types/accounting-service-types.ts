@@ -4,9 +4,6 @@ export interface LEDGER_INSERT {
   type: 'credit' | 'debit';
 };
 
-export interface LEDGER_INSERT_RESPONSE {
-
-};
 
 export interface ACCOUNTING_AUDIT_INSERT {
 

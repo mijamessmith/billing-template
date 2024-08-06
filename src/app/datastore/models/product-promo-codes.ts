@@ -21,9 +21,12 @@ export default class LineItem {
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' }) //usually I'd verify that the from and to dates are in the current order
   valid_from: Date;
 
   @Column('datetime')
   valid_to!: Date;
+
+  @Column('boolean') //background producer can check these daily to save time in determining valid date ranges
+  active: Boolean;
 };

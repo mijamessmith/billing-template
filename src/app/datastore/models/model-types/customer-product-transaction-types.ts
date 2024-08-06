@@ -3,7 +3,3 @@ export enum TRANSACTION_TYPE {
   CREDIT = 'credit',
   PARTIAL_CREDIT = 'partial_credit'
 };
-
-export interface PURCHASE_TRANSACTION_TYPE {
-
-}

@@ -1,4 +1,5 @@
 import { PRODUCT_LIST, PRODUCT_TYPE, GET_PRODUCTS_RESPONSE, PROMO_CODE_TYPE } from './service-types/product-service-types';
+import PromoCode from '../datastore/models/product-promo-codes'
 import { getProduct as setUpGetProductNock, getProducts as setUpGetProductsNock, getProductPromoCode as setUpPromoCodeNock} from './nocks/service-nocks';
 import ServiceInterface from './service-interface';
 import axios from 'axios';
@@ -44,9 +45,9 @@ class ProductService extends ServiceInterface {
     Unsure if the promo code API would reside in an external service or not, but for clarity I built it in here.
     Usually, I would assume/prefer if it resided along with the product service.
   */
-  async getProductPromoCode(promoCodeId: string): Promise<PROMO_CODE_TYPE> {
+  async getProductPromoCode(promoCodeId: string): Promise<PromoCode> {
     try {
-      const response = await axios.get<PROMO_CODE_TYPE>(`${CLICKHOUSE_API_URL}/products/promo-codes/:${promoCodeId}`);
+      const response = await axios.get<PromoCode>(`${CLICKHOUSE_API_URL}/products/promo-codes/:${promoCodeId}`);
       return response.data;
     } catch (e) {
       logger.error(`${CTX} Error fetching product promo code: ${e.message}`);
