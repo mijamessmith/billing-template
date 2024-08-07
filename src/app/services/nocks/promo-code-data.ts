@@ -6,7 +6,7 @@ const getISODateStringWeeksFromToday: Function = (weeksToAdd: number = 1) => {
 }
 
 export const PROMO_CODE_DATA = {
-  1: {
+  'CLICKHOUSE': {
     id: '1',
     code: 'CLICKHOUSE',
     rate: .75,
@@ -16,7 +16,7 @@ export const PROMO_CODE_DATA = {
     valid_to: getISODateStringWeeksFromToday(2),
     active: true
   },
-  2: {
+  'HOLIDAY_2023': {
     id: '2',
     code: 'HOLIDAY_2023',
     rate: -10,
@@ -24,9 +24,9 @@ export const PROMO_CODE_DATA = {
     created_at: new Date().toISOString(),
     valid_from: getISODateStringWeeksFromToday(-40),
     valid_to: getISODateStringWeeksFromToday(-30),
-    active: false
+    active: true
   },
-  3: {
+  'SUMMER': {
     id: '3',
     code: 'SUMMER',
     rate: -20,
@@ -35,5 +35,15 @@ export const PROMO_CODE_DATA = {
     valid_from: new Date().toISOString(),
     valid_to: getISODateStringWeeksFromToday(1),
     active: true
-  }
+  },
+  'WINTER': {
+    id: '3',
+    code: 'WINTER',
+    rate: -15,
+    discount_type: 'fixed',
+    created_at: new Date().toISOString(),
+    valid_from: getISODateStringWeeksFromToday(12),
+    valid_to: getISODateStringWeeksFromToday(24),
+    active: false
+  },
 };

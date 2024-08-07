@@ -1,0 +1,103 @@
+{
+	"info": {
+		"_postman_id": "e80806c9-f9fc-4c59-bed4-254f8b270bc8",
+		"name": "clickhouse",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "11792464",
+		"_collection_link": "https://blue-escape-71220.postman.co/workspace/cargomatic~58f7749f-31f5-4483-ad00-bdf5c38938db/collection/11792464-e80806c9-f9fc-4c59-bed4-254f8b270bc8?action=share&source=collection_link&creator=11792464"
+	},
+	"item": [
+		{
+			"name": "create line item",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"ledger\": {\n    \"customer\": 3,\n    \"type\": \"credit\",\n    \"value\": 10,\n    \"ledger_id\": \"4A\"\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:3001/api/accounting/account-ledger"
+			},
+			"response": []
+		},
+		{
+			"name": "get customer balance",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3001/api/accounting/balance/:customerId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"api",
+						"accounting",
+						"balance",
+						":customerId"
+					],
+					"variable": [
+						{
+							"key": "customerId",
+							"value": "3"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get customer purchase history",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3001/api/accounting/purchase-history/:customerId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"api",
+						"accounting",
+						"purchase-history",
+						":customerId"
+					],
+					"variable": [
+						{
+							"key": "customerId",
+							"value": "4"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "purchase product",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"1\",\n  \"productId\": \"1\",\n  \"promoCode\": \"HOLIDAY_2023\",\n  \"quantity\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:3001/api/accounting/purchase"
+			},
+			"response": []
+		}
+	]
+}

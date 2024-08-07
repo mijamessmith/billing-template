@@ -8,7 +8,7 @@ import CustomerService from './customer-service';
 import ProductService  from './product-service';
 import ShipmentService from './shipment-service';
 import LineItemModel from '../datastore/models/line-items';
-import PromoCode from '../datastore/models/product-promo-codes';
+import { PROMO_CODE } from './service-types/promo-code-types';
 import { LINE_ITEM_TYPE } from '../datastore/models/model-types/line-item-types';
 import CustomerProductTransactions from '../datastore/models/customer-product-transactions';
 import { lock } from '../utils/lock';
@@ -128,7 +128,7 @@ class AccountingService extends ServiceInterface {
 
   async prepareCustomerPurchaseTransaction(purchaseTransaction: PURCHASE_TRANSACTION_TYPE) {
     const LGR = '(processCustomerPurchaseTransation)';
-    const { customerId, productId, promoCodeId, quantity } = purchaseTransaction;
+    const { customerId, productId, promoCode, quantity } = purchaseTransaction;
     const lockKey = `${customerId}_${productId}`;
     const unlock: Function = await lock(lockKey, LOCK_TIME_DEFAULT)
     try {
@@ -138,8 +138,8 @@ class AccountingService extends ServiceInterface {
       };
       const product: PRODUCT_TYPE = await this._productService.getProduct(productId);
       if (!product) throw new Error('Product Not Found');
-      const promoCode: PromoCode | null = await this._productService.getProductPromoCode(promoCodeId);
-      const cost: number = await this.applyProductDiscount(promoCode, product.price, quantity);
+      const promoCodeDiscount: PROMO_CODE | null = await this._productService.getProductPromoCode(promoCode);
+      const cost: number = await this.applyProductDiscount(promoCodeDiscount, product.price, quantity);
       const customerBalanceAfterPurchase = await this.determineCustomerCapacityToPurchaseProduct(customerId, cost);
       if (customerBalanceAfterPurchase < 0) {
         throw new Error('Customer Lacks Sufficient Funds for Purchase');
@@ -148,7 +148,7 @@ class AccountingService extends ServiceInterface {
         ...product,
         price: cost
       };
-      const purchase = await this.processPurchase(purchaseTransaction, discountedProduct, promoCode);
+      const purchase = await this.processPurchase(purchaseTransaction, discountedProduct, promoCodeDiscount);
       await unlock();
       return purchase;
     } catch (e) {
@@ -158,12 +158,13 @@ class AccountingService extends ServiceInterface {
     }
   };
 
-  async applyProductDiscount(promoCode: PromoCode | null, singleUnitPrice: number, quantity: number  ) {
+  async applyProductDiscount(promoCode: PROMO_CODE | null, singleUnitPrice: number, quantity: number  ) {
     const price = singleUnitPrice * quantity;
     try {
       if (!promoCode?.active) {
         return price;
       }
+      logger.info(`${CTX} Applying active promo code: ${promoCode.code}`)
       if (promoCode.discount_type === 'fixed') {
         const adjustedPrice = price + promoCode.rate; //we assume rates are always negative
         return adjustedPrice >= 0 ? adjustedPrice : 0;
@@ -181,7 +182,7 @@ class AccountingService extends ServiceInterface {
     }
   }
 
-  async processPurchase(transaction: PURCHASE_TRANSACTION_TYPE, product: PRODUCT_TYPE, promoCode?: PromoCode | null): Promise<CustomerProductTransactions> {
+  async processPurchase(transaction: PURCHASE_TRANSACTION_TYPE, product: PRODUCT_TYPE, promoCode?: PROMO_CODE | null): Promise<CustomerProductTransactions> {
     const LGR = '(processPurchase)';
     logger.info(`${CTX} ${LGR} Initiating purchase `);
     const queryRunner = await this._getQueryRunner();
@@ -206,7 +207,7 @@ class AccountingService extends ServiceInterface {
         quantity: transaction.quantity
       }
       if (promoCode) {
-        customerProductTransaction.promo_code_id = promoCode
+        customerProductTransaction.promo_code_id = promoCode.id
       }
       const productTransactionRepository = await queryRunner.manager.getRepository(CustomerProductTransactions);
       const transactionItem = productTransactionRepository.create(customerProductTransaction);

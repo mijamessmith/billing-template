@@ -1,4 +1,5 @@
 import nock from 'nock';
+import logger from '../../logger';
 import { CLICKHOUSE_API_URL } from '../../config';
 import { CUSTOMER_DATA_BY_ID } from './customer-data';
 import { PRODUCT_DATA_BY_ID } from './product-data';
@@ -47,6 +48,7 @@ export const getProducts = () => {
       for (let productId of products) {
         const product: PRODUCT_TYPE = PRODUCT_DATA_BY_ID[productId as string];
         if (!product) {
+          logger.info('huh' + uri)
           return [404, { message: `Product not found` }];
         }
         response.items.push(product);
@@ -57,17 +59,19 @@ export const getProducts = () => {
 };
 
 export const getProductPromoCode = () => {
-  nock(`${CLICKHOUSE_API_URL}/products/promo-codes/:promoCodeId`)
-    .get(/\/products\/\w+/)
+  nock(`${CLICKHOUSE_API_URL}/promo-codes/:promo-code-id`)
+    .persist()
+    .get(/promo-codes\/\w+/)
     .reply((uri, requestBody: any) => {
-      const promoCodeId = uri.split('/').pop();
-      const code = PROMO_CODE_DATA[promoCodeId as string];
+      const promoCode = uri.split('/').pop();
+      const code = PROMO_CODE_DATA[promoCode as string];
       if (code) {
         return [200, code];
       } else {
+
         return [404, { message: 'promo code not found' }];
       }
-    })
+    });
 };
 
 export const createShipment = () => {

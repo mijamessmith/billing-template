@@ -7,6 +7,6 @@ export interface LEDGER_INSERT {
 export interface PURCHASE_TRANSACTION_TYPE {
   customerId: string;
   productId: string;
-  promoCodeId: string;
+  promoCode: string;
   quantity: number;
 };

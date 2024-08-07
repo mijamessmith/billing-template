@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { TRANSACTION_TYPE } from './model-types/customer-product-transaction-types';
-import PromoCode from './product-promo-codes';
 import LineItem from './line-items';
 @Entity("customer_product_transactions")
 export default class CustomerProductTransactions {
@@ -14,7 +13,7 @@ export default class CustomerProductTransactions {
   product_sku!: string;
 
   @Column('int')
-  quantity!: number
+  quantity: number
 
   @OneToOne(() => LineItem)
   @JoinColumn({ name: 'line_item_id' })
@@ -26,7 +25,5 @@ export default class CustomerProductTransactions {
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  @ManyToOne(() => PromoCode)
-  @JoinColumn({ name: 'promo_code_id' })
-  promo_code_id?: PromoCode;
+  promo_code_id?: string;
 }
