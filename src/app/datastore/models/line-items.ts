@@ -5,7 +5,7 @@ import { LINE_ITEM_TYPE } from './model-types/line-item-types';
 export default class LineItem {
 
   @PrimaryGeneratedColumn('uuid')
-  readonly id: string;
+  readonly id?: string;
 
   @Column('varchar')
   customer!: string;
@@ -17,7 +17,7 @@ export default class LineItem {
   type!: LINE_ITEM_TYPE;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
+  created_at?: Date;
 
   @Column('varchar', { unique: true })
   ledger_id!: string;

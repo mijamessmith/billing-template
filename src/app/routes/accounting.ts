@@ -4,7 +4,8 @@ const CTX: string = 'accountingAPI';
 import AccountingService from  '../services/accounting-service';
 const accountingService = new AccountingService;
 import LineItem from '../datastore/models/line-items';
-import CustomerProductTransactions from '../datastore/models/customer-product-transactions'
+import CustomerProductTransaction from '../datastore/models/customer-product-transactions';
+import { PURCHASE_TRANSACTION_TYPE } from '../services/service-types/accounting-service-types';
 const accountingAPI = Router();
 
 accountingAPI.post('/account-ledger', async (req: Request, res: Response) => {
@@ -12,8 +13,7 @@ accountingAPI.post('/account-ledger', async (req: Request, res: Response) => {
     const ledger: Partial<LineItem> = req.body.ledger;
     const result = await accountingService.addLedger(ledger);
     return res.send({
-      success: true,
-      result,
+      success: true
     });
   } catch (e) {
     logger.error(`${CTX} Failed to add ledger`);
@@ -55,7 +55,7 @@ accountingAPI.get('/purchase-history/:customerId', async (req: Request, res: Res
         error: 'customer id not provided'
       });
     }
-    const purchases: CustomerProductTransactions[] = await accountingService.getCustomerPurchases(customerId);
+    const purchases: CustomerProductTransaction[] = await accountingService.getCustomerPurchases(customerId);
     res.status(200).send({
       success: true,
       customerId: customerId,
@@ -66,6 +66,23 @@ accountingAPI.get('/purchase-history/:customerId', async (req: Request, res: Res
     res.status(500).send({
       success: false,
       error: 'Internal Server Error: Failed to fetch purchase history'
+    });
+  }
+});
+
+accountingAPI.post('/purchase', async (req: Request, res: Response) => {
+  try {
+    const transactionRequest: PURCHASE_TRANSACTION_TYPE = req.body;
+    const purchaseTransaction = await accountingService.prepareCustomerPurchaseTransaction(transactionRequest);
+    res.send({
+      success: true,
+      purchaseTransaction
+    })
+  } catch (e) {
+    logger.error(`${CTX} Failed to purchase product`);
+    res.status(500).send({
+      success: false,
+      error: `Internal Server Error. Failed to purchase product: ${e.message}`
     });
   }
 });

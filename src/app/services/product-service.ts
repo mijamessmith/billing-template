@@ -45,13 +45,13 @@ class ProductService extends ServiceInterface {
     Unsure if the promo code API would reside in an external service or not, but for clarity I built it in here.
     Usually, I would assume/prefer if it resided along with the product service.
   */
-  async getProductPromoCode(promoCodeId: string): Promise<PromoCode> {
+  async getProductPromoCode(promoCodeId: string): Promise<PromoCode | null> {
     try {
       const response = await axios.get<PromoCode>(`${CLICKHOUSE_API_URL}/products/promo-codes/:${promoCodeId}`);
       return response.data;
     } catch (e) {
       logger.error(`${CTX} Error fetching product promo code: ${e.message}`);
-      throw e;
+      return null;
     }
   }
 

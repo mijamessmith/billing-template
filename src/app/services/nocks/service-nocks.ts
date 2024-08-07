@@ -56,7 +56,7 @@ export const getProducts = () => {
 };
 
 export const getProductPromoCode = () => {
-  nock(`${CLICKHOUSE_API_URL}/products/promo-code/:id`)
+  nock(`${CLICKHOUSE_API_URL}/products/promo-codes/:promoCodeId`)
     .get(/\/products\/\w+/)
     .reply((uri, requestBody: any) => {
       const promoCodeId = uri.split('/').pop();

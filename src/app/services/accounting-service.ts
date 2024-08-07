@@ -11,7 +11,7 @@ import PromoCode from '../datastore/models/product-promo-codes';
 import { LINE_ITEM_TYPE } from '../datastore/models/model-types/line-item-types';
 import CustomerProductTransactions from '../datastore/models/customer-product-transactions';
 import { lock } from '../utils/lock';
-import { UUID } from 'typeorm/driver/mongodb/bson.typings';
+import { randomUUID } from 'node:crypto';
 const CTX: string = '[AccountingService]';
 const LOCK_TIME_DEFAULT = 20000;
 class AccountingService extends ServiceInterface {
@@ -28,7 +28,8 @@ class AccountingService extends ServiceInterface {
     const LGR = '(addLedger)';
     const { ledger_id } = ledger;
     const lockKey = `${ledger_id}`;
-    const unlock: Function = await lock(lockKey, LOCK_TIME_DEFAULT)
+    const unlock: Function = await lock(lockKey, LOCK_TIME_DEFAULT);
+    logger.info(`${CTX} ${LGR} Locked ledger`)
     try {
       await this.validateLedgerTransaction(ledger);
     } catch (e) {
@@ -39,6 +40,7 @@ class AccountingService extends ServiceInterface {
     try {
       const ledgerEntry: LineItemModel = await this.processAddLedger(ledger);
       unlock();
+      logger.info(`${CTX} ${LGR} Transaction complete. Releasing Lock`)
       return ledgerEntry;
     } catch (e) {
       unlock();
@@ -129,7 +131,7 @@ class AccountingService extends ServiceInterface {
       };
       const product: PRODUCT_TYPE = await this._productService.getProduct(productId);
       if (!product) throw new Error('Product Not Found');
-      const promoCode: PromoCode = await this._productService.getProductPromoCode(promoCodeId);
+      const promoCode: PromoCode | null = await this._productService.getProductPromoCode(promoCodeId);
       const cost: number = await this.applyProductDiscount(promoCode, product.price);
       const customerBalanceAfterPurchase = await this.determineCustomerCapacityToPurchaseProduct(customerId, cost);
       if (customerBalanceAfterPurchase < 0) {
@@ -139,9 +141,9 @@ class AccountingService extends ServiceInterface {
         ...product,
         price: cost
       };
-      const result = await this.processPurchase(purchaseTransaction, discountedProduct, promoCode);
+      const purchase = await this.processPurchase(purchaseTransaction, discountedProduct, promoCode);
       await unlock();
-      return result;
+      return purchase;
     } catch (e) {
       logger.error(`${CTX} ${LGR} Error: ${e.message}`);
       await unlock();
@@ -174,31 +176,36 @@ class AccountingService extends ServiceInterface {
     }
   }
 
-  async processPurchase(transaction: PURCHASE_TRANSACTION_TYPE, product: PRODUCT_TYPE, promoCode: PromoCode): Promise<CustomerProductTransactions> {
+  async processPurchase(transaction: PURCHASE_TRANSACTION_TYPE, product: PRODUCT_TYPE, promoCode?: PromoCode | null): Promise<CustomerProductTransactions> {
     const LGR = '(processPurchase)';
+    logger.info(`${CTX} ${LGR} Initiating purchase `);
     const queryRunner = await this._getQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       const ledger: Partial<LineItemModel> = {
         customer: transaction.customerId,
-        value: product.price,
+        value: -(product.price),
         type: LINE_ITEM_TYPE.DEBIT,
-        ledger_id: new UUID().toString(),
+        ledger_id: randomUUID(),
       }
       const lineItemRepository = await queryRunner.manager.getRepository(LineItemModel);
       const lineItem = lineItemRepository.create(ledger);
       const ledgerEntry: LineItemModel = await lineItemRepository.save(lineItem);
+      logger.info(`${CTX} ${LGR} Line Item Inserted Successfully`)
       const customerProductTransaction: Partial<CustomerProductTransactions> = {
         customer: ledger.customer,
         product_sku: product.sku,
         line_item_id: ledgerEntry,
         transaction_type: TRANSACTION_TYPE.PURCHASE,
-        promo_code_id: promoCode
+      }
+      if (promoCode) {
+        customerProductTransaction.promo_code_id = promoCode
       }
       const productTransactionRepository = await queryRunner.manager.getRepository(CustomerProductTransactions);
       const transactionItem = productTransactionRepository.create(customerProductTransaction);
-      const customerPurchase: CustomerProductTransactions = await lineItemRepository.save(transactionItem);
+      const customerPurchase: CustomerProductTransactions = await productTransactionRepository.save(transactionItem);
+      logger.info(`${CTX} ${LGR} product Inserted Successfully`)
       this.postTransactionAudit(customerPurchase);
       return customerPurchase;
     } catch (e) {
