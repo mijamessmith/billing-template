@@ -1,5 +1,4 @@
 import DatabaseConnection from '../datastore/database/datasource';
-import logger from '../logger';
 import { DataSource, QueryRunner } from 'typeorm';
 class ServiceInterface {
   private _db: DatabaseConnection;

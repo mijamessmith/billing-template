@@ -1,5 +1,5 @@
 import redisClient from './redis';
-import { PRODUCT_TYPE, PRODUCT_LIST } from '../services/service-types/product-service-types';
+import { PRODUCT_TYPE } from '../services/service-types/product-service-types';
 import logger from '../logger';
 
 const CACHE_PREFIX = 'hbz1';

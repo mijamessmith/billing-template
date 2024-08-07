@@ -5,7 +5,7 @@ import AccountingService from  '../services/accounting-service';
 const accountingService = new AccountingService;
 import LineItem from '../datastore/models/line-items';
 import CustomerProductTransaction from '../datastore/models/customer-product-transactions';
-import { PURCHASE_TRANSACTION_TYPE } from '../services/service-types/accounting-service-types';
+import { PURCHASE_REFUND_TYPE, PURCHASE_TRANSACTION_TYPE } from '../services/service-types/accounting-service-types';
 const accountingAPI = Router();
 
 accountingAPI.post('/account-ledger', async (req: Request, res: Response) => {
@@ -74,6 +74,23 @@ accountingAPI.post('/purchase', async (req: Request, res: Response) => {
   try {
     const transactionRequest: PURCHASE_TRANSACTION_TYPE = req.body;
     const purchaseTransaction = await accountingService.prepareCustomerPurchaseTransaction(transactionRequest);
+    res.send({
+      success: true,
+      purchaseTransaction
+    })
+  } catch (e) {
+    logger.error(`${CTX} Failed to purchase product`);
+    res.status(500).send({
+      success: false,
+      error: `Internal Server Error. Failed to purchase product: ${e.message}`
+    });
+  }
+});
+
+accountingAPI.post('/purchase/refund', async (req: Request, res: Response) => {
+  try {
+    const refundTransaction: PURCHASE_REFUND_TYPE = req.body;
+    const purchaseTransaction = await accountingService.prepareCustomerRefundPurchaseTransaction(refundTransaction);
     res.send({
       success: true,
       purchaseTransaction

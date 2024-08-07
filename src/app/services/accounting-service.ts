@@ -1,8 +1,7 @@
 import logger from '../logger';
-import { DataSource } from 'typeorm';
 import ServiceInterface from './service-interface';
-import { LEDGER_INSERT, PURCHASE_TRANSACTION_TYPE } from './service-types/accounting-service-types';
-import { TRANSACTION_TYPE } from '../datastore/models/model-types/customer-product-transaction-types';
+import { PURCHASE_TRANSACTION_TYPE } from './service-types/accounting-service-types';
+import { TRANSACTION_TYPE, JOINED_TRANSACTION_TYPE, ORIGINAL_TRANSACTION_TYPE } from '../datastore/models/model-types/customer-product-transaction-types';
 import { PRODUCT_TYPE, PROMO_CODE_TYPE } from './service-types';
 import CustomerService from './customer-service';
 import ProductService  from './product-service';
@@ -11,6 +10,7 @@ import LineItemModel from '../datastore/models/line-items';
 import { PROMO_CODE } from './service-types/promo-code-types';
 import { LINE_ITEM_TYPE } from '../datastore/models/model-types/line-item-types';
 import CustomerProductTransactions from '../datastore/models/customer-product-transactions';
+import { PURCHASE_REFUND_TYPE } from './service-types/accounting-service-types';
 import { lock } from '../utils/lock';
 import { randomUUID } from 'node:crypto';
 const CTX: string = '[AccountingService]';
@@ -230,10 +230,76 @@ class AccountingService extends ServiceInterface {
     return Promise.resolve();
   };
 
-  async processCustomerCreditPurchaseTransaction(creditTransaction) {
+  async prepareCustomerRefundPurchaseTransaction(transactionRefundRequest: PURCHASE_REFUND_TYPE) {
+    const LGR = '(prepareCustomerRefundPurchaseTransaction)';
+    const lockKey = `${transactionRefundRequest.transactionId}_refund`;
+    const unlock: Function = await lock(lockKey, LOCK_TIME_DEFAULT)
     try {
-
+      logger.info(`${CTX} ${LGR} preparing purchase refund`);
+      const originalTransaction = await this.getTransaction(transactionRefundRequest.transactionId);
+      if (!originalTransaction) {
+        throw new Error('Transaction Not Found');
+      }
+      const existingRefundTransaction = await this.getRefundTransaction(originalTransaction.id);
+      if (existingRefundTransaction) {
+        throw new Error('Transaction refund already processed');
+      }
+      validateRefundValue(transactionRefundRequest, originalTransaction.transaction_line_item_value)
+      const result = await this.processRefundPurchase(transactionRefundRequest, originalTransaction);
+      unlock();
+      return result;
     } catch (e) {
+      logger.error(`${CTX} ${LGR} Error: ${e.message}`);
+      unlock();
+      throw e;
+    }
+  };
+
+  async processRefundPurchase(
+    transactionRefundRequest: PURCHASE_REFUND_TYPE,
+    originalTransaction: JOINED_TRANSACTION_TYPE)
+  {
+    const LGR = '(refundPurchase)';
+    logger.info(`${CTX} ${LGR} Initiating purchase refund`);
+    const queryRunner = await this._getQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const refundValue: number = transactionRefundRequest.refundType === TRANSACTION_TYPE.CREDIT ?
+        originalTransaction.transaction_line_item_value :
+        transactionRefundRequest.refundCredit;
+      const ledger: Partial<LineItemModel> = {
+        customer: originalTransaction.customer,
+        value: Math.abs(refundValue),
+        type: LINE_ITEM_TYPE.CREDIT,
+        ledger_id: randomUUID(),
+      }
+      const lineItemRepository = await queryRunner.manager.getRepository(LineItemModel);
+      const lineItem = lineItemRepository.create(ledger);
+      const ledgerEntry: LineItemModel = await lineItemRepository.save(lineItem);
+      logger.info(`${CTX} ${LGR} Line Item Credit Inserted Successfully`);
+      const referencedTransaction: ORIGINAL_TRANSACTION_TYPE = originalTransaction;
+
+      //insert transaction
+      const customerProductTransaction: Partial<CustomerProductTransactions> = {
+        customer: originalTransaction.customer,
+        product_sku: originalTransaction.product_sku,
+        line_item_id: ledgerEntry,
+        transaction_type: transactionRefundRequest.refundType,
+        quantity: originalTransaction.quantity,
+        original_purchase_transaction_id: referencedTransaction
+      }
+      const productTransactionRepository = queryRunner.manager.getRepository(CustomerProductTransactions);
+      const transactionItem = productTransactionRepository.create(customerProductTransaction);
+      const customerRefund: CustomerProductTransactions = await productTransactionRepository.save(transactionItem);
+      logger.info(`${CTX} ${LGR} Transaction Inserted Successfully`);
+      this.postTransactionAudit(customerRefund);
+      return customerRefund;
+    } catch (e) {
+      logger.error(`${CTX} ${LGR} Error: ${e.message}`);
+      logger.error(`${CTX} ${LGR} Rolling Back Transaction`);
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
       throw e;
     }
   };
@@ -256,10 +322,47 @@ class AccountingService extends ServiceInterface {
         .getRawMany();
       return result;
     } catch (e) {
-      logger.error(`${CTX} getCustomerBalance Error: ${e.message}`);
+      logger.error(`${CTX} getCustomerPurchases Error: ${e.message}`);
       throw e;
     }
   }
+
+  async getRefundTransaction(transactionId: string): Promise<CustomerProductTransactions | null> {
+    try {
+      const repository = await this._getRepository(CustomerProductTransactions);
+      const result: CustomerProductTransactions | undefined = await repository.createQueryBuilder('customer_product_transactions')
+        .where('customer_product_transactions.original_purchase_transaction_id = :original_purchase_transaction_id', { original_purchase_transaction_id: transactionId})
+        .getRawOne()
+      return result ?? null;
+    } catch (e) {
+      logger.error(`${CTX} getRefundTransaction Error: ${e.message}`);
+      throw e;
+    }
+  }
+
+  async getTransaction(transactionId: string): Promise<JOINED_TRANSACTION_TYPE | null> {
+    try {
+      const repository = await this._getRepository(CustomerProductTransactions);
+      const result: JOINED_TRANSACTION_TYPE | undefined = await repository.createQueryBuilder('customer_product_transactions')
+        .leftJoinAndSelect('customer_product_transactions.line_item_id', 'line_item')
+        .select([
+          'customer_product_transactions.id as id',
+          'customer_product_transactions.customer as customer',
+          'customer_product_transactions.product_sku as product_sku',
+          'customer_product_transactions.quantity as quantity',
+          'customer_product_transactions.transaction_type as transaction_type',
+          'customer_product_transactions.created_at as created_at',
+          'customer_product_transactions.promo_code_id as promo_code_id',
+          'line_item.value as transaction_line_item_value'
+        ])
+        .where('customer_product_transactions.id = :id', { id: transactionId })
+        .getRawOne();
+      return result ?? null;
+    } catch (e) {
+      logger.error(`${CTX} getTransaction Error: ${e.message}`);
+      throw e;
+    }
+  };
 
   async _validateCustomerId(customerId: string): Promise<Boolean> {
     logger.info(`${CTX} Validating Customer Identity`)
@@ -273,6 +376,18 @@ const validateLedgerValues = (ledger: Partial<LineItemModel>): Boolean => {
   if (!type || !value) throw new Error('Missing value and type of ledger');
   if (type === LINE_ITEM_TYPE.CREDIT) return value >= 0;
   return value <= 0;
+}
+
+const validateRefundValue = (
+  transactionRefundRequest: PURCHASE_REFUND_TYPE,
+  originalTransactionValue: number):
+  Boolean => {
+  if (transactionRefundRequest.refundType === TRANSACTION_TYPE.PARTIAL_CREDIT) {
+    if (Math.abs(transactionRefundRequest.refundCredit) > Math.abs(originalTransactionValue)) {
+      throw new Error('Partial Refund Cannot Exceed Original Purchase Value');
+    }
+  }
+  return true;
 }
 
 export default AccountingService;

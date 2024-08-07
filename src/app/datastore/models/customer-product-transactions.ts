@@ -25,5 +25,10 @@ export default class CustomerProductTransactions {
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
+  @Column('varchar', { nullable: true })
   promo_code_id?: string;
+
+  @OneToOne(() => CustomerProductTransactions)
+  @JoinColumn({ name: 'original_purchase_transaction_id' })
+  original_purchase_transaction_id?: CustomerProductTransactions;
 }

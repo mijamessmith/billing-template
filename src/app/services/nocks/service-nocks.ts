@@ -1,6 +1,6 @@
 import nock from 'nock';
 import logger from '../../logger';
-import { CLICKHOUSE_API_URL } from '../../config';
+import { CLICKHOUSE_API_URL, SHIPMENT_CREATION_FAILURE_DEMONINATOR } from '../../config';
 import { CUSTOMER_DATA_BY_ID } from './customer-data';
 import { PRODUCT_DATA_BY_ID } from './product-data';
 import { GET_PRODUCTS_RESPONSE, PRODUCT_TYPE } from '../service-types/product-service-types';
@@ -76,12 +76,22 @@ export const getProductPromoCode = () => {
 
 export const createShipment = () => {
   nock(CLICKHOUSE_API_URL)
+    .persist()
     .post('/shipments')
     .reply((uri, requestBody) => {
       if(!Object.values(requestBody)) return [500, { message: 'Incomplete Shipment Request' }];
       const response: SUCCESSFUL_SHIPMENT_TYPE = {
         ordered: new Date().toISOString()
       }
+      const requestFailed = randomOneOutOfNum();
+      if (requestFailed) {
+        return [500, { success: false, error: 'shipment creation failed' }];
+      }
       return [200, response];
     });
+}
+
+function randomOneOutOfNum(): boolean {
+  const randomNumber = Math.random();
+  return randomNumber < (1 / SHIPMENT_CREATION_FAILURE_DEMONINATOR);
 }
