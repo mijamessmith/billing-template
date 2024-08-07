@@ -8,4 +8,5 @@ export interface PURCHASE_TRANSACTION_TYPE {
   customerId: string;
   productId: string;
   promoCodeId: string;
+  quantity: number;
 };

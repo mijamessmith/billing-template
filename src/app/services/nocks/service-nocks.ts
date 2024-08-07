@@ -2,9 +2,10 @@ import nock from 'nock';
 import { CLICKHOUSE_API_URL } from '../../config';
 import { CUSTOMER_DATA_BY_ID } from './customer-data';
 import { PRODUCT_DATA_BY_ID } from './product-data';
-import { randomUUID } from 'crypto';
-import { GET_PRODUCTS_RESPONSE, PRODUCT_TYPE, PROMO_CODE_TYPE } from '../service-types/product-service-types';
+import { GET_PRODUCTS_RESPONSE, PRODUCT_TYPE } from '../service-types/product-service-types';
+import { SUCCESSFUL_SHIPMENT_TYPE } from '../service-types';
 import { PROMO_CODE_DATA } from './promo-code-data';
+
 export const getCustomer = () => {
   nock(`${CLICKHOUSE_API_URL}/customers/:customerId`)
     .persist()
@@ -73,7 +74,10 @@ export const createShipment = () => {
   nock(CLICKHOUSE_API_URL)
     .post('/shipments')
     .reply((uri, requestBody) => {
-      if(!Object.values(requestBody)) return [500, { message: 'Incomplete Request' }];
-      return [200, { id: randomUUID() }];
+      if(!Object.values(requestBody)) return [500, { message: 'Incomplete Shipment Request' }];
+      const response: SUCCESSFUL_SHIPMENT_TYPE = {
+        ordered: new Date().toISOString()
+      }
+      return [200, response];
     });
 }

@@ -13,6 +13,9 @@ export default class CustomerProductTransactions {
   @Column('varchar')
   product_sku!: string;
 
+  @Column('int')
+  quantity!: number
+
   @OneToOne(() => LineItem)
   @JoinColumn({ name: 'line_item_id' })
   line_item_id!: LineItem;

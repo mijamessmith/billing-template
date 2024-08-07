@@ -6,6 +6,7 @@ import { TRANSACTION_TYPE } from '../datastore/models/model-types/customer-produ
 import { PRODUCT_TYPE, PROMO_CODE_TYPE } from './service-types';
 import CustomerService from './customer-service';
 import ProductService  from './product-service';
+import ShipmentService from './shipment-service';
 import LineItemModel from '../datastore/models/line-items';
 import PromoCode from '../datastore/models/product-promo-codes';
 import { LINE_ITEM_TYPE } from '../datastore/models/model-types/line-item-types';
@@ -18,11 +19,17 @@ class AccountingService extends ServiceInterface {
 
   private _customerService = new CustomerService();
   private _productService = new ProductService();
-
-  constructor(customerService: CustomerService = new CustomerService(), productService: ProductService = new ProductService()) {
-    super();
-    this._customerService = customerService;
-    this._productService = productService;
+  private _shipmentService = new ShipmentService();
+  constructor(
+    customerService: CustomerService = new CustomerService(),
+    productService: ProductService = new ProductService(),
+    shipmentService: ShipmentService = new ShipmentService()
+  )
+    {
+      super();
+      this._customerService = customerService;
+      this._productService = productService;
+      this._shipmentService = shipmentService;
   }
   async addLedger(ledger: Partial <LineItemModel>): Promise<LineItemModel> {
     const LGR = '(addLedger)';
@@ -121,7 +128,7 @@ class AccountingService extends ServiceInterface {
 
   async prepareCustomerPurchaseTransaction(purchaseTransaction: PURCHASE_TRANSACTION_TYPE) {
     const LGR = '(processCustomerPurchaseTransation)';
-    const { customerId, productId, promoCodeId } = purchaseTransaction;
+    const { customerId, productId, promoCodeId, quantity } = purchaseTransaction;
     const lockKey = `${customerId}_${productId}`;
     const unlock: Function = await lock(lockKey, LOCK_TIME_DEFAULT)
     try {
@@ -132,7 +139,7 @@ class AccountingService extends ServiceInterface {
       const product: PRODUCT_TYPE = await this._productService.getProduct(productId);
       if (!product) throw new Error('Product Not Found');
       const promoCode: PromoCode | null = await this._productService.getProductPromoCode(promoCodeId);
-      const cost: number = await this.applyProductDiscount(promoCode, product.price);
+      const cost: number = await this.applyProductDiscount(promoCode, product.price, quantity);
       const customerBalanceAfterPurchase = await this.determineCustomerCapacityToPurchaseProduct(customerId, cost);
       if (customerBalanceAfterPurchase < 0) {
         throw new Error('Customer Lacks Sufficient Funds for Purchase');
@@ -151,12 +158,10 @@ class AccountingService extends ServiceInterface {
     }
   };
 
-  async applyProductDiscount(promoCode: PromoCode | null, price: number  ) {
+  async applyProductDiscount(promoCode: PromoCode | null, singleUnitPrice: number, quantity: number  ) {
+    const price = singleUnitPrice * quantity;
     try {
-      if (!promoCode) {
-        return price;
-      }
-      if (!promoCode.active) {
+      if (!promoCode?.active) {
         return price;
       }
       if (promoCode.discount_type === 'fixed') {
@@ -198,6 +203,7 @@ class AccountingService extends ServiceInterface {
         product_sku: product.sku,
         line_item_id: ledgerEntry,
         transaction_type: TRANSACTION_TYPE.PURCHASE,
+        quantity: transaction.quantity
       }
       if (promoCode) {
         customerProductTransaction.promo_code_id = promoCode
@@ -205,12 +211,14 @@ class AccountingService extends ServiceInterface {
       const productTransactionRepository = await queryRunner.manager.getRepository(CustomerProductTransactions);
       const transactionItem = productTransactionRepository.create(customerProductTransaction);
       const customerPurchase: CustomerProductTransactions = await productTransactionRepository.save(transactionItem);
-      logger.info(`${CTX} ${LGR} product Inserted Successfully`)
+      logger.info(`${CTX} ${LGR} product Inserted Successfully`);
+      const shipment = await this._shipmentService.createShipment(customerPurchase);
       this.postTransactionAudit(customerPurchase);
       return customerPurchase;
     } catch (e) {
-      await queryRunner.rollbackTransaction();
       logger.error(`${CTX} ${LGR} Error: ${e.message}`);
+      logger.error(`${CTX} ${LGR} Rolling Back Transaction`);
+      await queryRunner.rollbackTransaction();
       await queryRunner.release();
       throw e;
     }
