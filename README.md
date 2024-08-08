@@ -3,8 +3,8 @@
 ## Index
 1. [Installation and Setup](#installation-and-setup)
 2. [API Design Notes](#api-design-notes)
-3. [Alternative API Design Thoughts](#alternative-api-design-thoughts)
-4. [Additional API Features Not Present](#additional-api-features-not-present)
+3. [Thoughts](#alternative-api-design-thoughts)
+4. [Additional API Features And Billing Architecture](#additional-api-features-not-present)
 
 ## Installation and Setup
 
@@ -44,7 +44,7 @@ In general, an additional entity, `ORDERS`, could be implemented to link togethe
 - Articulate additional customer information
 - Provide another layer of relationships to solve data issues
 
-A customer could have many orders, each with many shipments, and these could be invoiced together.
+A customer could have many orders, each with many shipments, and these could be invoiced together as an order invoice.
 
 ## Additional API Features And Billing Architecture
 
@@ -68,7 +68,3 @@ A customer could have many orders, each with many shipments, and these could be 
 
 6 **Localization**:
    - Currency and localization of user messages can ensure that our product stays viable for international use. A localization API could help in both our notification and invoicing template api.
-
-
-
-Feel free to use this revised README to provide clear and structured information about your API.
