@@ -8,13 +8,19 @@
 	},
 	"item": [
 		{
-			"name": "create line item",
+			"name": "post line item",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "3ab2eff7-517f-4b69-b851-9e43b96e9ec5",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"ledger\": {\n    \"customer\": 3,\n    \"type\": \"credit\",\n    \"value\": 10,\n    \"ledger_id\": \"4A\"\n  }\n}",
+					"raw": "{\n  \"ledger\": {\n    \"customer\": 1,\n    \"type\": \"credit\",\n    \"value\": 100,\n    \"ledger_id\": \"1A\"\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -29,7 +35,13 @@
 			"name": "get customer balance",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "3ab2eff7-517f-4b69-b851-9e43b96e9ec5",
+						"type": "text"
+					}
+				],
 				"url": {
 					"raw": "http://localhost:3001/api/accounting/balance/:customerId",
 					"protocol": "http",
@@ -46,7 +58,7 @@
 					"variable": [
 						{
 							"key": "customerId",
-							"value": "3"
+							"value": "1"
 						}
 					]
 				}
@@ -57,7 +69,13 @@
 			"name": "get customer purchase history",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "3ab2eff7-517f-4b69-b851-9e43b96e9ec5",
+						"type": "text"
+					}
+				],
 				"url": {
 					"raw": "http://localhost:3001/api/accounting/purchase-history/:customerId",
 					"protocol": "http",
@@ -74,7 +92,7 @@
 					"variable": [
 						{
 							"key": "customerId",
-							"value": "4"
+							"value": "1"
 						}
 					]
 				}
@@ -85,10 +103,16 @@
 			"name": "purchase product",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "3ab2eff7-517f-4b69-b851-9e43b96e9ec5",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"1\",\n  \"productId\": \"1\",\n  \"promoCode\": \"HOLIDAY_2023\",\n  \"quantity\": 1\n}",
+					"raw": "{\n  \"customerId\": \"1\",\n  \"productId\": \"2\",\n  \"promoCode\": \"HOLIDAY_2023\",\n  \"quantity\": 1\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -96,6 +120,30 @@
 					}
 				},
 				"url": "http://localhost:3001/api/accounting/purchase"
+			},
+			"response": []
+		},
+		{
+			"name": "Refund Purchase",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "3ab2eff7-517f-4b69-b851-9e43b96e9ec5",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionId\": \"3ab2eff7-517f-4b69-b851-9e43b96e9ec5\",\n  \"refundType\": \"partial_credit\",\n  \"refundCredit\": 5\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:3001/api/accounting/purchase/refund"
 			},
 			"response": []
 		}
