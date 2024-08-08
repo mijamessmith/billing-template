@@ -32,8 +32,8 @@
 This API separates a customer's balance (made up of a log of line items), their purchases (transactions), and all external API data models: promo-codes, customers, products, and shipments. The neutrality of the line items keeps the ledger system open for use by other external APIs that may want to add different kinds of product or metering charges in the future.
 
 Several considerations ensure the acidity of line items:
-- A unique `ledger_id` (UUID)
-- A server-side lock system
+- A unique `ledger_id` (UUID) field to provide additional defense again duplicate entries in the case of unexpected database driver issues (This comes from my own personal experience with an unexplainable/unloggable double insert case with the mongoDB driver)
+- A server-side locking system
 - A datastore-side transaction rollback system
 
 ## Alternative API Design Thoughts
@@ -46,7 +46,7 @@ In general, an additional entity, `ORDERS`, could be implemented to link togethe
 
 A customer could have many orders, each with many shipments, and these could be invoiced together.
 
-## Additional API Features Not Present
+## Additional API Features And Billing Architecture
 
 1. **Payload Validation**:
    - To expedite the application launch, a payload/request schema verification tool, such as JSON Schema validation or GraphQL, was not implemented.
@@ -61,6 +61,14 @@ A customer could have many orders, each with many shipments, and these could be 
    - The shipment API should call a notification API after successfully creating a shipment. Additionally, a notification system within the customer balance API would ensure a user's client application is aware of any balance changes or purchase transactions.
 
 5. **Invoicing**:
-   - After creating a shipment, a message would be queued to a pub/sub system to create an invoice for the customer. This invoice would combine shipment, product, customer, and transaction data into an HTML template for email and PDF invoices.
+   - After creating a shipment, a message would be queued to a pub/sub system to create an invoice for the customer. This invoice would combine shipment, product, customer, and transaction data in combination with a template service to create an HTML template for email and PDF invoices.
+
+6. **Documents**:
+   - Storing the invoices mentioned above would require a documents service, such as S3
+
+6 **Localization**:
+   - Currency and localization of user messages can ensure that our product stays viable for international use. A localization API could help in both our notification and invoicing template api.
+
+
 
 Feel free to use this revised README to provide clear and structured information about your API.
