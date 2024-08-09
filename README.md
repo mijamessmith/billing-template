@@ -36,6 +36,7 @@ In root dir, run `docker-compose up`
    - Enter your authorization token header value as stored in `config.ts`: `3ab2eff7-517f-4b69-b851-9e43b96e9ec5`.
 11. **Check Mock Data**:
     - Mock data for customers, products, and promo codes can be found in the `./app/services/nocks/` directory.
+    **NOTE** For ease of use, I stubbed product and customer ids into simple strings 1-5. See the postman collection for an example
 
 ## API Design Notes
 
