@@ -8,6 +8,12 @@
 
 ## Installation and Setup
 
+### Global Software Requirements
+1. Node
+2. NVM
+3. Redis
+4. Babel
+
 1. **Navigate to the root directory of this repository**
 2. **Install the node version**: `nvm install`
 3. **Install the necessary node packages**: `npm install`
@@ -17,14 +23,15 @@
 5. **Edit Shipment Nock Failure Rate**:
    - Modify the failure rate for the `createShipment` nock in `./src/config`.
    - **Note**: Defaults to failing once every six times.
-6. **Start the application**: `npm start`
-7. **View OpenAPI Documentation**:
+6. **Build with Babel**: `npm run build`
+7. **Start the application**: `npm start`
+8. **View OpenAPI Documentation**:
    - Documentation is available at `/api-docs`.
    - **Note**: No authorization header is needed for this route.
-8. **Optional**: Import the `./postman.json` collection for easier API testing.
-9. **Authorization Token**:
+9. **Optional**: Import the `./postman.json` collection for easier API testing.
+10. **Authorization Token**:
    - Enter your authorization token header value as stored in `config.ts`: `3ab2eff7-517f-4b69-b851-9e43b96e9ec5`.
-10. **Check Mock Data**:
+11. **Check Mock Data**:
     - Mock data for customers, products, and promo codes can be found in the `./app/services/nocks/` directory.
 
 ## API Design Notes
