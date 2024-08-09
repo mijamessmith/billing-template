@@ -5,7 +5,16 @@ class RedisClient {
   private client: RedisClientType;
 
   constructor() {
-    this.client = createClient();
+    if (process.env.NODE_ENV === 'docker') {
+      this.client = createClient({
+        socket: {
+          port: 6379,
+          host: 'redis'
+        }
+      });
+    } else {
+      this.client = createClient();
+    }
 
     this.client.on('error', (err) => {
       logger.error(`Redis Client Error: ${err}`);

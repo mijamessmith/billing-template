@@ -4,7 +4,8 @@
   "description": "take home assignment",
   "main": "dist/app/server.js",
   "scripts": {
-    "start": "NODE_ENV=dev babel-node --extensions \".ts\" src/app/server.ts --inspect --max-old-space-size=1024 --trace-deprecation --trace-warnings server",
+    "start": "NODE_ENV=dev babel-node --extensions \".ts\" src/app/server.ts --max-old-space-size=1024 --trace-deprecation --trace-warnings server",
+    "docker-start": "NODE_ENV=docker babel-node --extensions \".ts\" src/app/server.ts --max-old-space-size=1024 --trace-deprecation --trace-warnings server",
     "build": "babel src --out-dir dist --extensions \".ts,.tsx\"",
     "serve": "node dist/app/server.js",
     "test": "jest --forceExit --detectOpenHandles"

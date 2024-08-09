@@ -8,7 +8,10 @@
 
 ## Installation and Setup
 
-### Global Software Requirements
+### Usage with Docker
+In root dir, run `docker-compose up`
+
+### Global Software Requirements for non-docker local use
 1. Node
 2. NVM
 3. Redis
@@ -17,7 +20,7 @@
 1. **Navigate to the root directory of this repository**
 2. **Install the node version**: `nvm install`
 3. **Install the necessary node packages**: `npm install`
-4. **SQLite Configuration**:
+4. **SQLite Confi guration**:
    - This application uses SQLite with its in-memory option.
    - If you wish to persist your data and have SQLite installed on your machine, change the default database credentials in `./src/app/utils/env-utils`.
 5. **Edit Shipment Nock Failure Rate**:
